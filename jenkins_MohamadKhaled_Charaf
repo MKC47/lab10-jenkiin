@@ -2,7 +2,7 @@ pipeline {
     agent any
     environment {
         VIRTUAL_ENV = 'venv'
-	PYTHON = "C:\\Users\\khale\\AppData\\Local\\Programs\\Python\\Python313\\python.exe"
+	PYTHONPATH = "${env.WORKSPACE}"
     }
     stages {
         stage('Setup') {
