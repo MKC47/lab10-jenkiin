@@ -1,0 +1,50 @@
+pipeline {
+    agent any
+    environment {
+        VIRTUAL_ENV = 'venv'
+	PYTHON = "C:\\Users\\khale\\AppData\\Local\\Programs\\Python\\Python313\\python.exe"
+    }
+    stages {
+        stage('Setup') {
+            steps {
+                script {
+                    // Check if the virtual environment exists
+                    if (!fileExists("${env.WORKSPACE}\\${VIRTUAL_ENV}")) {
+                        bat "py -m venv ${VIRTUAL_ENV}"
+                    }
+                    // Activate the virtual environment and install dependencies
+                    bat ".\\${VIRTUAL_ENV}\\Scripts\\activate && pip install -r requirements.txt"
+                }
+            }
+        }
+        stage('Lint') {
+            steps {
+                script {
+                    // Activate the virtual environment and run flake8
+                    bat ".\\${VIRTUAL_ENV}\\Scripts\\activate && flake8 app.py"
+                }
+            }
+        }
+        stage('Test') {
+            steps {
+                script {
+                    // Activate the virtual environment and run pytest
+                    bat ".\\${VIRTUAL_ENV}\\Scripts\\activate && pytest"
+                }
+            }
+        }
+        stage('Deploy') {
+            steps {
+                script {
+                    // Deployment logic (e.g., pushing to a remote server)
+                    echo "Deploying application..."
+                }
+            }
+        }
+    }
+    post {
+        always {
+            cleanWs()
+        }
+    }
+}
