@@ -12,8 +12,9 @@ pipeline {
                     if (!fileExists("${env.WORKSPACE}\\${VIRTUAL_ENV}")) {
                         bat "${env.PYTHON} -m venv ${VIRTUAL_ENV}"
                     }
+                    // Activate virtual environment and install dependencies
                     bat """
-                        .\\${VIRTUAL_ENV}\\Scripts\\activate &&
+                        call .\\${VIRTUAL_ENV}\\Scripts\\activate &&
                         pip install -r requirements.txt
                     """
                 }
@@ -23,7 +24,7 @@ pipeline {
             steps {
                 script {
                     bat """
-                        .\\${VIRTUAL_ENV}\\Scripts\\activate &&
+                        call .\\${VIRTUAL_ENV}\\Scripts\\activate &&
                         flake8 app.py
                     """
                 }
@@ -33,7 +34,7 @@ pipeline {
             steps {
                 script {
                     bat """
-                        .\\${VIRTUAL_ENV}\\Scripts\\activate &&
+                        call .\\${VIRTUAL_ENV}\\Scripts\\activate &&
                         pytest
                     """
                 }
@@ -43,7 +44,7 @@ pipeline {
             steps {
                 script {
                     bat """
-                        .\\${VIRTUAL_ENV}\\Scripts\\activate &&
+                        call .\\${VIRTUAL_ENV}\\Scripts\\activate &&
                         coverage run -m pytest &&
                         coverage report &&
                         coverage html
@@ -55,7 +56,7 @@ pipeline {
             steps {
                 script {
                     bat """
-                        .\\${VIRTUAL_ENV}\\Scripts\\activate &&
+                        call .\\${VIRTUAL_ENV}\\Scripts\\activate &&
                         bandit -r .
                     """
                 }
@@ -66,7 +67,7 @@ pipeline {
                 script {
                     echo "Deploying application..."
                     bat """
-                        .\\${VIRTUAL_ENV}\\Scripts\\activate &&
+                        call .\\${VIRTUAL_ENV}\\Scripts\\activate &&
                         python deploy.py
                     """
                 }
