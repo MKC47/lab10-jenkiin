@@ -45,18 +45,41 @@ pipeline {
         stage('Security Scan') {
             steps {
                 script {
-                    // Option 1: Change console code page to UTF-8 before running Bandit
-                    bat """
-                        chcp 65001
-                        call .\\${VIRTUAL_ENV}\\Scripts\\activate && bandit -r .
-                    """
+                    // Change code page and run Bandit, capture exit code
+                    def banditStatus = bat(
+                        script: "chcp 65001 && call .\\${VIRTUAL_ENV}\\Scripts\\activate && bandit -r . -f json -o bandit_report.json",
+                        returnStatus: true
+                    )
                     
-                    // Option 2: Alternatively, set PYTHONIOENCODING within the batch command
-                    // bat "set PYTHONIOENCODING=utf-8 && call .\\${VIRTUAL_ENV}\\Scripts\\activate && bandit -r ."
+                    if (banditStatus != 0) {
+                        echo "Bandit found security issues."
+                        // Mark the build as unstable instead of failing
+                        currentBuild.result = 'UNSTABLE'
+                    } else {
+                        echo "No security issues found by Bandit."
+                    }
                 }
             }
         }
+        stage('Archive Reports') {
+            steps {
+                // Archive Coverage and Bandit reports
+                archiveArtifacts artifacts: 'htmlcov/**, bandit_report.json', allowEmptyArchive: true
+                // Optionally, publish coverage reports
+                publishHTML(target: [
+                    allowMissing: true,
+                    alwaysLinkToLastBuild: true,
+                    keepAll: true,
+                    reportDir: 'htmlcov',
+                    reportFiles: 'index.html',
+                    reportName: 'Coverage Report'
+                ])
+            }
+        }
         stage('Deploy') {
+            when {
+                expression { currentBuild.result != 'FAILURE' }
+            }
             steps {
                 script {
                     echo "Deploying application..."
@@ -69,6 +92,9 @@ pipeline {
     post {
         always {
             cleanWs()
+        }
+        unstable {
+            echo 'Build marked as UNSTABLE due to security issues.'
         }
     }
 }
