@@ -30,10 +30,33 @@ pipeline {
                 }
             }
         }
+        stage('Coverage') {
+            steps {
+                script {
+                    bat """
+                        .\\${VIRTUAL_ENV}\\Scripts\\activate &&
+                        coverage run -m pytest &&
+                        coverage report &&
+                        coverage html
+                    """
+                }
+            }
+        }
+        stage('Security Scan') {
+            steps {
+                script {
+                    bat ".\\${VIRTUAL_ENV}\\Scripts\\activate && bandit -r ."
+                }
+            }
+        }
         stage('Deploy') {
             steps {
                 script {
                     echo "Deploying application..."
+                    bat """
+                        .\\${VIRTUAL_ENV}\\Scripts\\activate &&
+                        python deploy.py
+                    """
                 }
             }
         }
