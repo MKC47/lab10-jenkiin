@@ -1,61 +1,39 @@
 pipeline {
     agent any
     environment {
-        PYTHONPATH = "${env.WORKSPACE}"
+        VIRTUAL_ENV = 'venv'
+        PYTHON = "C:\\Users\\khale\\AppData\\Local\\Programs\\Python\\Python313\\python.exe"
     }
     stages {
         stage('Setup') {
             steps {
                 script {
-                    bat 'python -m venv venv'
-                    bat 'venv\\Scripts\\activate && pip install -r requirements.txt && pip freeze > requirements_lock.txt'
+                    // Use full path to Python for creating virtual environment
+                    if (!fileExists("${env.WORKSPACE}\\${VIRTUAL_ENV}")) {
+                        bat "${env.PYTHON} -m venv ${VIRTUAL_ENV}"
+                    }
+                    bat ".\\${VIRTUAL_ENV}\\Scripts\\activate && pip install -r requirements.txt"
                 }
             }
         }
         stage('Lint') {
             steps {
                 script {
-                    bat 'venv\\Scripts\\activate && flake8 app.py'
+                    bat ".\\${VIRTUAL_ENV}\\Scripts\\activate && flake8 app.py"
                 }
             }
         }
         stage('Test') {
             steps {
                 script {
-                    bat 'venv\\Scripts\\activate && pip install -r requirements_lock.txt'
-                    bat 'venv\\Scripts\\activate && pytest'
-                }
-            }
-        }
-        stage('Coverage') {
-            steps {
-                script {
-                    // Ensuring all dependencies are installed
-                    bat 'venv\\Scripts\\activate && pip install pytest coverage'
-
-                    // Running coverage with pytest
-                    bat 'venv\\Scripts\\activate && coverage run -m pytest'
-                    bat 'venv\\Scripts\\activate && coverage report -m'
-                    bat 'venv\\Scripts\\activate && coverage html'
-                }
-            }
-        }
-        stage('Security Scan') {
-            steps {
-                script {
-                    // Set the output encoding to UTF-8
-                    withEnv(["PYTHONIOENCODING=utf-8"]) {
-                        bat 'venv\\Scripts\\activate && bandit -r . -f txt -o bandit_report.txt || exit 0'
-                    }
+                    bat ".\\${VIRTUAL_ENV}\\Scripts\\activate && pytest"
                 }
             }
         }
         stage('Deploy') {
             steps {
                 script {
-                    // Simple local deployment
-                    bat 'echo Deploying application...'
-                    bat 'venv\\Scripts\\activate && python app.py'
+                    echo "Deploying application..."
                 }
             }
         }
