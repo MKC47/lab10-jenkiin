@@ -9,11 +9,9 @@ pipeline {
         stage('Setup') {
             steps {
                 script {
-                    // Create virtual environment if it doesn't exist
                     if (!fileExists("${env.WORKSPACE}\\${VIRTUAL_ENV}")) {
                         bat "${env.PYTHON} -m venv ${VIRTUAL_ENV}"
                     }
-                    // Activate virtual environment and install dependencies
                     bat "call .\\${VIRTUAL_ENV}\\Scripts\\activate && pip install -r requirements.txt"
                 }
             }
@@ -21,7 +19,6 @@ pipeline {
         stage('Lint') {
             steps {
                 script {
-                    // Activate virtual environment and run flake8
                     bat "call .\\${VIRTUAL_ENV}\\Scripts\\activate && flake8 app.py"
                 }
             }
@@ -29,7 +26,6 @@ pipeline {
         stage('Test') {
             steps {
                 script {
-                    // Activate virtual environment and run pytest
                     bat "call .\\${VIRTUAL_ENV}\\Scripts\\activate && pytest"
                 }
             }
@@ -37,7 +33,6 @@ pipeline {
         stage('Coverage') {
             steps {
                 script {
-                    // Activate virtual environment and run coverage
                     bat "call .\\${VIRTUAL_ENV}\\Scripts\\activate && coverage run -m pytest && coverage report && coverage html"
                 }
             }
@@ -45,7 +40,6 @@ pipeline {
         stage('Security Scan') {
             steps {
                 script {
-                    // Change code page and run Bandit, capture exit code
                     def banditStatus = bat(
                         script: "chcp 65001 && call .\\${VIRTUAL_ENV}\\Scripts\\activate && bandit -r . -f json -o bandit_report.json",
                         returnStatus: true
@@ -53,7 +47,6 @@ pipeline {
                     
                     if (banditStatus != 0) {
                         echo "Bandit found security issues."
-                        // Mark the build as unstable instead of failing
                         currentBuild.result = 'UNSTABLE'
                     } else {
                         echo "No security issues found by Bandit."
@@ -63,9 +56,7 @@ pipeline {
         }
         stage('Archive Reports') {
             steps {
-                // Archive Coverage and Bandit reports
                 archiveArtifacts artifacts: 'htmlcov/**, bandit_report.json', allowEmptyArchive: true
-                // Optionally, publish coverage reports
                 publishHTML(target: [
                     allowMissing: true,
                     alwaysLinkToLastBuild: true,
@@ -83,8 +74,10 @@ pipeline {
             steps {
                 script {
                     echo "Deploying application..."
-                    // Activate virtual environment and run deploy.py (if implemented)
-                    bat "call .\\${VIRTUAL_ENV}\\Scripts\\activate && python deploy.py"
+                    def deployDir = "C:\\deploy"
+                    bat "if not exist ${deployDir} mkdir ${deployDir}"
+                    bat "copy ${env.WORKSPACE}\\app.py ${deployDir}\\app.py"
+                    bat "call .\\${VIRTUAL_ENV}\\Scripts\\activate && python ${deployDir}\\app.py"
                 }
             }
         }
