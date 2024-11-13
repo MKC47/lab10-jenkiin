@@ -3,16 +3,17 @@ pipeline {
     environment {
         VIRTUAL_ENV = 'venv'
         PYTHON = "C:\\Users\\khale\\AppData\\Local\\Programs\\Python\\Python313\\python.exe"
+        PYTHONIOENCODING = 'utf-8' // Ensures Python uses UTF-8 for I/O operations
     }
     stages {
         stage('Setup') {
             steps {
                 script {
-                    // Use full path to Python for creating virtual environment
+                    // Create virtual environment if it doesn't exist
                     if (!fileExists("${env.WORKSPACE}\\${VIRTUAL_ENV}")) {
                         bat "${env.PYTHON} -m venv ${VIRTUAL_ENV}"
                     }
-                    // Activate virtual environment and install dependencies on the same line
+                    // Activate virtual environment and install dependencies
                     bat "call .\\${VIRTUAL_ENV}\\Scripts\\activate && pip install -r requirements.txt"
                 }
             }
@@ -20,7 +21,7 @@ pipeline {
         stage('Lint') {
             steps {
                 script {
-                    // Activate and run flake8 on the same line
+                    // Activate virtual environment and run flake8
                     bat "call .\\${VIRTUAL_ENV}\\Scripts\\activate && flake8 app.py"
                 }
             }
@@ -28,7 +29,7 @@ pipeline {
         stage('Test') {
             steps {
                 script {
-                    // Activate and run pytest on the same line
+                    // Activate virtual environment and run pytest
                     bat "call .\\${VIRTUAL_ENV}\\Scripts\\activate && pytest"
                 }
             }
@@ -36,7 +37,7 @@ pipeline {
         stage('Coverage') {
             steps {
                 script {
-                    // Activate and run coverage commands on the same line
+                    // Activate virtual environment and run coverage
                     bat "call .\\${VIRTUAL_ENV}\\Scripts\\activate && coverage run -m pytest && coverage report && coverage html"
                 }
             }
@@ -44,8 +45,14 @@ pipeline {
         stage('Security Scan') {
             steps {
                 script {
-                    // Activate and run bandit on the same line
-                    bat "call .\\${VIRTUAL_ENV}\\Scripts\\activate && bandit -r ."
+                    // Option 1: Change console code page to UTF-8 before running Bandit
+                    bat """
+                        chcp 65001
+                        call .\\${VIRTUAL_ENV}\\Scripts\\activate && bandit -r .
+                    """
+                    
+                    // Option 2: Alternatively, set PYTHONIOENCODING within the batch command
+                    // bat "set PYTHONIOENCODING=utf-8 && call .\\${VIRTUAL_ENV}\\Scripts\\activate && bandit -r ."
                 }
             }
         }
@@ -53,7 +60,7 @@ pipeline {
             steps {
                 script {
                     echo "Deploying application..."
-                    // Activate and run deploy.py on the same line
+                    // Activate virtual environment and run deploy.py
                     bat "call .\\${VIRTUAL_ENV}\\Scripts\\activate && python deploy.py"
                 }
             }
