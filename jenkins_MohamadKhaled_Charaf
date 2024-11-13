@@ -12,21 +12,30 @@ pipeline {
                     if (!fileExists("${env.WORKSPACE}\\${VIRTUAL_ENV}")) {
                         bat "${env.PYTHON} -m venv ${VIRTUAL_ENV}"
                     }
-                    bat ".\\${VIRTUAL_ENV}\\Scripts\\activate && pip install -r requirements.txt"
+                    bat """
+                        .\\${VIRTUAL_ENV}\\Scripts\\activate &&
+                        pip install -r requirements.txt
+                    """
                 }
             }
         }
         stage('Lint') {
             steps {
                 script {
-                    bat ".\\${VIRTUAL_ENV}\\Scripts\\activate && flake8 app.py"
+                    bat """
+                        .\\${VIRTUAL_ENV}\\Scripts\\activate &&
+                        flake8 app.py
+                    """
                 }
             }
         }
         stage('Test') {
             steps {
                 script {
-                    bat ".\\${VIRTUAL_ENV}\\Scripts\\activate && pytest"
+                    bat """
+                        .\\${VIRTUAL_ENV}\\Scripts\\activate &&
+                        pytest
+                    """
                 }
             }
         }
@@ -45,7 +54,10 @@ pipeline {
         stage('Security Scan') {
             steps {
                 script {
-                    bat ".\\${VIRTUAL_ENV}\\Scripts\\activate && bandit -r ."
+                    bat """
+                        .\\${VIRTUAL_ENV}\\Scripts\\activate &&
+                        bandit -r .
+                    """
                 }
             }
         }
