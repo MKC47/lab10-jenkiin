@@ -12,53 +12,40 @@ pipeline {
                     if (!fileExists("${env.WORKSPACE}\\${VIRTUAL_ENV}")) {
                         bat "${env.PYTHON} -m venv ${VIRTUAL_ENV}"
                     }
-                    // Activate virtual environment and install dependencies
-                    bat """
-                        call .\\${VIRTUAL_ENV}\\Scripts\\activate &&
-                        pip install -r requirements.txt
-                    """
+                    // Activate virtual environment and install dependencies on the same line
+                    bat "call .\\${VIRTUAL_ENV}\\Scripts\\activate && pip install -r requirements.txt"
                 }
             }
         }
         stage('Lint') {
             steps {
                 script {
-                    bat """
-                        call .\\${VIRTUAL_ENV}\\Scripts\\activate &&
-                        flake8 app.py
-                    """
+                    // Activate and run flake8 on the same line
+                    bat "call .\\${VIRTUAL_ENV}\\Scripts\\activate && flake8 app.py"
                 }
             }
         }
         stage('Test') {
             steps {
                 script {
-                    bat """
-                        call .\\${VIRTUAL_ENV}\\Scripts\\activate &&
-                        pytest
-                    """
+                    // Activate and run pytest on the same line
+                    bat "call .\\${VIRTUAL_ENV}\\Scripts\\activate && pytest"
                 }
             }
         }
         stage('Coverage') {
             steps {
                 script {
-                    bat """
-                        call .\\${VIRTUAL_ENV}\\Scripts\\activate &&
-                        coverage run -m pytest &&
-                        coverage report &&
-                        coverage html
-                    """
+                    // Activate and run coverage commands on the same line
+                    bat "call .\\${VIRTUAL_ENV}\\Scripts\\activate && coverage run -m pytest && coverage report && coverage html"
                 }
             }
         }
         stage('Security Scan') {
             steps {
                 script {
-                    bat """
-                        call .\\${VIRTUAL_ENV}\\Scripts\\activate &&
-                        bandit -r .
-                    """
+                    // Activate and run bandit on the same line
+                    bat "call .\\${VIRTUAL_ENV}\\Scripts\\activate && bandit -r ."
                 }
             }
         }
@@ -66,10 +53,8 @@ pipeline {
             steps {
                 script {
                     echo "Deploying application..."
-                    bat """
-                        call .\\${VIRTUAL_ENV}\\Scripts\\activate &&
-                        python deploy.py
-                    """
+                    // Activate and run deploy.py on the same line
+                    bat "call .\\${VIRTUAL_ENV}\\Scripts\\activate && python deploy.py"
                 }
             }
         }
